@@ -7,7 +7,7 @@ import { ImageUpload } from './components/ImageUpload';
 import { ReportView } from './components/ReportView';
 import { About } from './components/About';
 import { ConfirmationDialog } from './components/ConfirmationDialog';
-import { analyzePatientCase } from './services/geminiService';
+import { analyzePatientCase, analyzeXrayImage } from './services/geminiService';
 import { PatientData, AnalysisResult, AppStep } from './types';
 
 const INITIAL_DATA: PatientData = {
@@ -66,6 +66,15 @@ const App: React.FC = () => {
   const [xrayNote, setXrayNote] = useState<string>("");
   const [ultrasoundNote, setUltrasoundNote] = useState<string>("");
 
+  // Collapsible state for notes
+  const [expandCtNote, setExpandCtNote] = useState(false);
+  const [expandXrayNote, setExpandXrayNote] = useState(false);
+  const [expandUsNote, setExpandUsNote] = useState(false);
+
+  // X-Ray specific analysis state
+  const [xrayAnalysis, setXrayAnalysis] = useState<string | null>(null);
+  const [analyzingXray, setAnalyzingXray] = useState(false);
+
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,6 +89,10 @@ const App: React.FC = () => {
     setCtScanNote("");
     setXrayNote("");
     setUltrasoundNote("");
+    setExpandCtNote(false);
+    setExpandXrayNote(false);
+    setExpandUsNote(false);
+    setXrayAnalysis(null);
     setAnalysisResult(null);
     setStep(AppStep.INTAKE);
     setError(null);
@@ -130,9 +143,9 @@ const App: React.FC = () => {
   const handleExportForm = () => {
     const doc = new jsPDF();
 
-    // Export Header in Burgundy
+    // Export Header in Navy Blue
     doc.setFontSize(18);
-    doc.setTextColor(136, 19, 55); // Burgundy
+    doc.setTextColor(30, 58, 138); // Blue-900
     doc.text("Tenwek Myeloma Guard - Patient Intake Data", 14, 20);
     
     doc.setFontSize(10);
@@ -150,7 +163,7 @@ const App: React.FC = () => {
         ['Location', patientData.location],
       ],
       theme: 'striped',
-      headStyles: { fillColor: [136, 19, 55] }
+      headStyles: { fillColor: [30, 58, 138] }
     });
 
     // Clinical Data
@@ -175,13 +188,14 @@ const App: React.FC = () => {
         ['History', `Bone: ${patientData.medicalHistory.priorBoneIssues}, Kidney: ${patientData.medicalHistory.priorKidneyIssues}, MGUS: ${patientData.medicalHistory.historyOfMGUS ? 'Yes' : 'No'}`]
       ],
       theme: 'striped',
-      headStyles: { fillColor: [136, 19, 55] }
+      headStyles: { fillColor: [30, 58, 138] }
     });
 
     // Notes
     let combinedNotes = patientData.notes || 'None';
     if (ctScanNote) combinedNotes += `\nCT Note: ${ctScanNote}`;
     if (xrayNote) combinedNotes += `\nX-Ray Note: ${xrayNote}`;
+    if (xrayAnalysis) combinedNotes += `\nX-Ray AI Analysis: ${xrayAnalysis}`;
     if (ultrasoundNote) combinedNotes += `\nUltrasound Note: ${ultrasoundNote}`;
 
     autoTable(doc, {
@@ -189,10 +203,24 @@ const App: React.FC = () => {
       head: [['Notes & Observations']],
       body: [[combinedNotes]],
       theme: 'striped',
-      headStyles: { fillColor: [136, 19, 55] }
+      headStyles: { fillColor: [30, 58, 138] }
     });
 
     doc.save(`Intake_Form_${patientData.patientId || 'Patient'}.pdf`);
+  };
+
+  const handleAnalyzeXray = async () => {
+    if (!xrayData) return;
+    setAnalyzingXray(true);
+    setXrayAnalysis(null);
+    try {
+      const result = await analyzeXrayImage(xrayData.base64, xrayData.mimeType);
+      setXrayAnalysis(result);
+    } catch (e) {
+      setXrayAnalysis("Error analyzing X-Ray image. Please try again.");
+    } finally {
+      setAnalyzingXray(false);
+    }
   };
 
   const handleAnalyzeClick = () => {
@@ -213,6 +241,7 @@ const App: React.FC = () => {
     let combinedNotes = patientData.notes;
     if (ctScanNote.trim()) combinedNotes += `\n\n[CT Scan Note]: ${ctScanNote.trim()}`;
     if (xrayNote.trim()) combinedNotes += `\n\n[X-Ray Note]: ${xrayNote.trim()}`;
+    if (xrayAnalysis?.trim()) combinedNotes += `\n\n[Previous AI X-Ray Check]: ${xrayAnalysis.trim()}`;
     if (ultrasoundNote.trim()) combinedNotes += `\n\n[Ultrasound Note]: ${ultrasoundNote.trim()}`;
 
     const dataForAnalysis = {
@@ -282,6 +311,7 @@ const App: React.FC = () => {
                 <p className="text-sm text-slate-500 mb-4">Upload available scans to assist AI interpretation.</p>
                 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* CT SCAN SECTION */}
                     <div className="flex flex-col h-full gap-2">
                       <div className="flex-grow">
                         <ImageUpload 
@@ -290,30 +320,125 @@ const App: React.FC = () => {
                           onClear={() => setCtScanData(null)}
                         />
                       </div>
-                      <textarea
-                        className="w-full rounded-md border-slate-300 shadow-sm focus:border-rose-500 focus:ring-rose-500 p-2 text-sm border"
-                        rows={2}
-                        placeholder="Specific notes for CT Scan..."
-                        value={ctScanNote}
-                        onChange={(e) => setCtScanNote(e.target.value)}
-                      />
+                      
+                      <button
+                        onClick={() => setExpandCtNote(!expandCtNote)}
+                        className={`flex items-center justify-between w-full px-3 py-2 text-xs font-medium rounded-md border transition-all ${
+                          expandCtNote || ctScanNote 
+                            ? 'bg-blue-50 text-blue-700 border-blue-200' 
+                            : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                           {expandCtNote || ctScanNote ? (
+                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                           ) : (
+                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                           )}
+                           {ctScanNote ? 'Edit Notes' : 'Add Notes'}
+                        </span>
+                        <span className="text-lg leading-none font-bold text-slate-400">{expandCtNote ? '−' : '+'}</span>
+                      </button>
+
+                      {expandCtNote && (
+                        <textarea
+                          className="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 text-sm border animate-in fade-in slide-in-from-top-1 duration-200"
+                          rows={3}
+                          placeholder="Specific notes for CT Scan..."
+                          value={ctScanNote}
+                          onChange={(e) => setCtScanNote(e.target.value)}
+                        />
+                      )}
                     </div>
+                    
+                    {/* X-RAY SECTION */}
                     <div className="flex flex-col h-full gap-2">
-                      <div className="flex-grow">
+                      <div className="flex-grow relative">
                         <ImageUpload 
                           title="X-Ray"
-                          onImageSelect={(base64, mimeType) => setXrayData({ base64, mimeType })}
-                          onClear={() => setXrayData(null)}
+                          onImageSelect={(base64, mimeType) => {
+                            setXrayData({ base64, mimeType });
+                            setXrayAnalysis(null);
+                          }}
+                          onClear={() => {
+                            setXrayData(null);
+                            setXrayAnalysis(null);
+                          }}
                         />
                       </div>
-                      <textarea
-                        className="w-full rounded-md border-slate-300 shadow-sm focus:border-rose-500 focus:ring-rose-500 p-2 text-sm border"
-                        rows={2}
-                        placeholder="Specific notes for X-Ray..."
-                        value={xrayNote}
-                        onChange={(e) => setXrayNote(e.target.value)}
-                      />
+                      
+                      {xrayData && (
+                        <div className="space-y-2 animate-in fade-in slide-in-from-top-1">
+                          <button
+                            onClick={handleAnalyzeXray}
+                            disabled={analyzingXray}
+                            className="w-full py-2 bg-blue-50 text-blue-800 text-xs font-semibold rounded-md border border-blue-200 hover:bg-blue-100 flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                          >
+                            {analyzingXray ? (
+                               <>
+                                 <span className="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></span>
+                                 Scanning for Lesions...
+                               </>
+                            ) : (
+                               <>
+                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                                 Analyze X-Ray Only
+                               </>
+                            )}
+                          </button>
+                          
+                          {xrayAnalysis && (
+                            <div className="bg-slate-50 border border-slate-200 rounded-md p-3 text-xs shadow-sm">
+                              <div className="flex justify-between items-start mb-1">
+                                 <span className="font-bold text-slate-700 flex items-center gap-1">
+                                   <svg className="w-3 h-3 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                   AI Findings
+                                 </span>
+                                 <button onClick={() => setXrayAnalysis(null)} className="text-slate-400 hover:text-slate-600 font-bold">&times;</button>
+                              </div>
+                              <p className="text-slate-600 leading-relaxed mb-2">{xrayAnalysis}</p>
+                              <button 
+                                onClick={() => setXrayNote(prev => (prev ? prev + "\n\n" : "") + "[AI X-Ray Findings]: " + xrayAnalysis)}
+                                className="w-full text-center py-1 bg-white border border-slate-200 rounded text-[10px] text-blue-600 font-medium hover:bg-slate-50"
+                              >
+                                + Copy Findings to Notes
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      <button
+                        onClick={() => setExpandXrayNote(!expandXrayNote)}
+                        className={`flex items-center justify-between w-full px-3 py-2 text-xs font-medium rounded-md border transition-all ${
+                          expandXrayNote || xrayNote 
+                            ? 'bg-blue-50 text-blue-700 border-blue-200' 
+                            : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                           {expandXrayNote || xrayNote ? (
+                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                           ) : (
+                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                           )}
+                           {xrayNote ? 'Edit Notes' : 'Add Notes'}
+                        </span>
+                        <span className="text-lg leading-none font-bold text-slate-400">{expandXrayNote ? '−' : '+'}</span>
+                      </button>
+
+                      {expandXrayNote && (
+                        <textarea
+                          className="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 text-sm border animate-in fade-in slide-in-from-top-1 duration-200"
+                          rows={3}
+                          placeholder="Specific notes for X-Ray..."
+                          value={xrayNote}
+                          onChange={(e) => setXrayNote(e.target.value)}
+                        />
+                      )}
                     </div>
+
+                    {/* ULTRASOUND SECTION */}
                     <div className="flex flex-col h-full gap-2">
                       <div className="flex-grow">
                         <ImageUpload 
@@ -322,13 +447,35 @@ const App: React.FC = () => {
                           onClear={() => setUltrasoundData(null)}
                         />
                       </div>
-                      <textarea
-                        className="w-full rounded-md border-slate-300 shadow-sm focus:border-rose-500 focus:ring-rose-500 p-2 text-sm border"
-                        rows={2}
-                        placeholder="Specific notes for Ultrasound..."
-                        value={ultrasoundNote}
-                        onChange={(e) => setUltrasoundNote(e.target.value)}
-                      />
+                      
+                      <button
+                        onClick={() => setExpandUsNote(!expandUsNote)}
+                        className={`flex items-center justify-between w-full px-3 py-2 text-xs font-medium rounded-md border transition-all ${
+                          expandUsNote || ultrasoundNote 
+                            ? 'bg-blue-50 text-blue-700 border-blue-200' 
+                            : 'bg-white text-slate-500 border-slate-200 hover:bg-slate-50'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                           {expandUsNote || ultrasoundNote ? (
+                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                           ) : (
+                             <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                           )}
+                           {ultrasoundNote ? 'Edit Notes' : 'Add Notes'}
+                        </span>
+                        <span className="text-lg leading-none font-bold text-slate-400">{expandUsNote ? '−' : '+'}</span>
+                      </button>
+
+                      {expandUsNote && (
+                        <textarea
+                          className="w-full rounded-md border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 p-2 text-sm border animate-in fade-in slide-in-from-top-1 duration-200"
+                          rows={3}
+                          placeholder="Specific notes for Ultrasound..."
+                          value={ultrasoundNote}
+                          onChange={(e) => setUltrasoundNote(e.target.value)}
+                        />
+                      )}
                     </div>
                 </div>
               </div>
@@ -345,7 +492,7 @@ const App: React.FC = () => {
                 </button>
                 <button
                   onClick={handleAnalyzeClick}
-                  className="bg-rose-800 hover:bg-rose-900 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2"
+                  className="bg-blue-800 hover:bg-blue-900 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex items-center gap-2"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -359,8 +506,8 @@ const App: React.FC = () => {
           {step === AppStep.ANALYZING && (
             <div className="flex flex-col items-center justify-center min-h-[50vh] text-center space-y-4">
               <div className="relative w-20 h-20">
-                <div className="absolute top-0 left-0 w-full h-full border-4 border-rose-200 rounded-full opacity-25 animate-ping"></div>
-                <div className="absolute top-0 left-0 w-full h-full border-4 border-t-rose-800 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+                <div className="absolute top-0 left-0 w-full h-full border-4 border-blue-200 rounded-full opacity-25 animate-ping"></div>
+                <div className="absolute top-0 left-0 w-full h-full border-4 border-t-blue-800 border-r-transparent border-b-transparent border-l-transparent rounded-full animate-spin"></div>
               </div>
               <h2 className="text-xl font-semibold text-slate-800">Analyzing Case Data...</h2>
               <p className="text-slate-500 max-w-md">

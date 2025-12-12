@@ -9,8 +9,8 @@ interface LayoutProps {
 export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigate }) => {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
-      {/* Burgundy Header for Myeloma Awareness */}
-      <header className="bg-rose-900 text-white shadow-lg sticky top-0 z-50 border-b border-rose-800">
+      {/* Navy Blue Header for Tenwek Branding */}
+      <header className="bg-blue-900 text-white shadow-lg sticky top-0 z-50 border-b border-blue-800">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-8">
             <div 
@@ -26,7 +26,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                   onError={(e) => {
                     // Fallback if image fails to load
                     e.currentTarget.style.display = 'none';
-                    e.currentTarget.parentElement!.innerHTML = '<svg class="w-8 h-8 text-rose-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>';
+                    e.currentTarget.parentElement!.innerHTML = '<svg class="w-8 h-8 text-blue-900" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>';
                   }}
                 />
               </div>
@@ -34,7 +34,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                 <h1 className="text-xl font-bold tracking-tight text-white leading-tight">
                   Tenwek Myeloma Guard
                 </h1>
-                <p className="text-xs text-rose-200 font-medium">AI Oncology Support • Bomet East</p>
+                <p className="text-xs text-blue-200 font-medium">AI Oncology Support • Bomet East</p>
               </div>
             </div>
 
@@ -43,8 +43,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                 onClick={() => onNavigate('assessment')}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   currentView === 'assessment' 
-                    ? 'bg-rose-950 text-white shadow-inner border border-rose-800' 
-                    : 'text-rose-100 hover:bg-rose-800 hover:text-white'
+                    ? 'bg-blue-950 text-white shadow-inner border border-blue-800' 
+                    : 'text-blue-100 hover:bg-blue-800 hover:text-white'
                 }`}
               >
                 Assessment
@@ -53,8 +53,8 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
                 onClick={() => onNavigate('about')}
                 className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   currentView === 'about' 
-                    ? 'bg-rose-950 text-white shadow-inner border border-rose-800' 
-                    : 'text-rose-100 hover:bg-rose-800 hover:text-white'
+                    ? 'bg-blue-950 text-white shadow-inner border border-blue-800' 
+                    : 'text-blue-100 hover:bg-blue-800 hover:text-white'
                 }`}
               >
                 About
@@ -63,7 +63,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
           </div>
           
           <div className="hidden md:block">
-            <span className="bg-rose-950 px-3 py-1 rounded-full text-xs font-semibold border border-rose-700 text-rose-100 flex items-center gap-2">
+            <span className="bg-blue-950 px-3 py-1 rounded-full text-xs font-semibold border border-blue-700 text-blue-100 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
               AI System Online
             </span>
@@ -78,9 +78,9 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onNavigat
       <footer className="bg-slate-900 text-slate-400 py-8 text-center text-sm border-t border-slate-800">
         <div className="max-w-4xl mx-auto px-4">
           <div className="flex justify-center gap-6 mb-4 md:hidden">
-            <button onClick={() => onNavigate('assessment')} className="hover:text-rose-400">Assessment</button>
+            <button onClick={() => onNavigate('assessment')} className="hover:text-blue-400">Assessment</button>
             <span className="text-slate-700">|</span>
-            <button onClick={() => onNavigate('about')} className="hover:text-rose-400">About</button>
+            <button onClick={() => onNavigate('about')} className="hover:text-blue-400">About</button>
           </div>
           <div className="mb-4">
              <p className="font-semibold text-slate-300">Tenwek Hospital &middot; We Treat, Jesus Heals</p>

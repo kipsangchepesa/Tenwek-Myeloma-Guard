@@ -36,7 +36,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
         
         <div className="p-6 border-b border-slate-100 bg-slate-50/50">
           <h3 className="text-xl font-bold text-slate-800 flex items-center gap-2">
-            <svg className="w-6 h-6 text-rose-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-6 h-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
             Confirm Patient Data
@@ -67,7 +67,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
              {activeSymptoms.length > 0 ? (
                <div className="flex flex-wrap gap-2">
                  {activeSymptoms.map((s, i) => (
-                   <span key={i} className="px-2.5 py-1 bg-rose-50 text-rose-700 rounded-md border border-rose-100 text-xs capitalize font-medium">
+                   <span key={i} className="px-2.5 py-1 bg-blue-50 text-blue-700 rounded-md border border-blue-100 text-xs capitalize font-medium">
                      {s}
                    </span>
                  ))}
@@ -151,7 +151,7 @@ export const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
           </button>
           <button 
             onClick={onConfirm}
-            className="bg-rose-700 hover:bg-rose-800 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all transform active:scale-95 flex items-center gap-2"
+            className="bg-blue-800 hover:bg-blue-900 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:shadow-lg transition-all transform active:scale-95 flex items-center gap-2"
           >
             <span>Proceed to Analysis</span>
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">

@@ -29,9 +29,9 @@ export const ReportView: React.FC<ReportViewProps> = ({ result, patientData, ima
   const handleExportPDF = () => {
     const doc = new jsPDF();
 
-    // Document Header - Burgundy Color (R=128, G=0, B=32 approx for rose-900/burgundy)
+    // Document Header - Navy Blue Color (R=30, G=58, B=138 approx for blue-900)
     doc.setFontSize(18);
-    doc.setTextColor(136, 19, 55); // Rose-900 equivalent
+    doc.setTextColor(30, 58, 138); // Blue-900 equivalent
     doc.text("Tenwek Myeloma Guard - AI Report", 14, 20);
     
     doc.setFontSize(10);
@@ -73,7 +73,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ result, patientData, ima
     if (patientData.notes || imagingNotes?.ctScan || imagingNotes?.xray || imagingNotes?.ultrasound) {
        yPos += 2;
        doc.setFontSize(10);
-       doc.setTextColor(136, 19, 55); // Burgundy
+       doc.setTextColor(30, 58, 138); // Navy Blue
        doc.setFont("helvetica", "bold");
        doc.text("Clinical & Imaging Notes", 14, yPos);
        doc.line(14, yPos + 1, 196, yPos + 1); // Underline
@@ -104,7 +104,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ result, patientData, ima
       ]],
       theme: 'grid',
       headStyles: {
-        fillColor: [136, 19, 55], // Rose-900 / Burgundy
+        fillColor: [30, 58, 138], // Blue-900 / Navy
         textColor: 255,
         fontStyle: 'bold',
         halign: 'center'
@@ -200,7 +200,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ result, patientData, ima
             onClick={handleExportPDF}
             className="bg-white hover:bg-slate-50 text-slate-700 font-medium py-2 px-4 rounded-lg transition-colors border border-slate-300 text-sm flex items-center gap-2 shadow-sm"
           >
-            <svg className="w-4 h-4 text-rose-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
             </svg>
             PDF
@@ -234,7 +234,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ result, patientData, ima
         <div className="space-y-6">
           <section className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-full">
             <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-              <svg className="w-5 h-5 text-rose-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-5 h-5 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               Executive Summary
@@ -248,7 +248,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ result, patientData, ima
               <ul className="space-y-2">
                 {result.findings.map((finding, idx) => (
                   <li key={idx} className="flex items-start gap-2 text-slate-700 text-sm">
-                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-rose-600 flex-shrink-0"></span>
+                    <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-600 flex-shrink-0"></span>
                     <span>{finding}</span>
                   </li>
                 ))}

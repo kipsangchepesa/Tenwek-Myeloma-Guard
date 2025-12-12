@@ -23,8 +23,14 @@ export const analyzePatientCase = async (
     You are "Myeloma Guard", an expert AI oncology assistant at Tenwek Hospital in Bomet County, Kenya. 
     Multiple Myeloma is rampant in this region (specifically Bomet East).
     
-    Your goal is to analyze patient symptoms, lab data, and any provided diagnostic imaging (CT, X-Ray, Ultrasound) to predict the early stages of Multiple Myeloma and support the oncologist's diagnosis.
-
+    **Role & Capability:**
+    You are powered by advanced computer vision capabilities. You must simulate the analytical rigor of state-of-the-art **Python medical imaging libraries** (such as MONAI, PyTorch, SimpleITK, and OpenCV) to interpret the provided scans. 
+    
+    Apply "radiomics-like" feature extraction logic:
+    1. **Texture Analysis:** Detect heterogeneity in bone marrow.
+    2. **Edge Detection:** Identify "punched-out" lytic lesions with sharp borders.
+    3. **Density Segmentation:** Assess osteopenia (reduced bone density) in vertebrae and long bones.
+    
     **Patient Context:**
     ${data.patientId ? `- Patient ID: ${data.patientId}` : ''}
     ${data.uhid ? `- UHID: ${data.uhid}` : ''}
@@ -71,10 +77,10 @@ export const analyzePatientCase = async (
     **Task:**
     Analyze the provided information and provided images to assess the likelihood of Multiple Myeloma. 
     
-    **Imaging Interpretation Instructions:**
-    - If a **CT Scan** is provided: Look for lytic lesions (punched-out holes in bone), fractures, or plasmacytomas.
-    - If an **X-Ray** is provided: Look for "punched-out" lytic lesions, diffuse osteopenia, or pathological fractures (especially in vertebrae/skull/long bones).
-    - If an **Ultrasound** is provided: Assess for soft tissue plasmacytomas or renal involvement if visible. Note that US is less typical for bone but may show associated soft tissue masses.
+    **Imaging Interpretation Instructions (Simulating Python Library Analysis):**
+    - **CT Scan:** Scan for lytic lesions (focal low-density areas) and cortical destruction.
+    - **X-Ray:** Detect lucent "punched-out" lesions, endosteal scalloping, and generalized osteopenia.
+    - **Ultrasound:** Analyze for soft tissue masses (plasmacytomas) or renal echogenicity changes.
     
     Return a valid JSON object with the following structure:
     {
@@ -119,11 +125,12 @@ export const analyzePatientCase = async (
 
   try {
     const response: GenerateContentResponse = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-3-pro-preview',
       contents: { parts },
       config: {
         responseMimeType: 'application/json',
-        temperature: 0.4, // Lower temperature for more analytical/medical output
+        // Enable thinking for deep reasoning about medical data and image analysis
+        thinkingConfig: { thinkingBudget: 16384 },
       }
     });
 
@@ -139,5 +146,51 @@ export const analyzePatientCase = async (
   } catch (error) {
     console.error("Gemini Analysis Error:", error);
     throw new Error("Failed to analyze patient data. Please try again.");
+  }
+};
+
+export const analyzeXrayImage = async (
+  base64: string, 
+  mimeType: string
+): Promise<string> => {
+  const prompt = `
+    You are an expert radiologist assistant at Tenwek Hospital. 
+    Analyze this X-Ray image specifically for signs of Multiple Myeloma using advanced computer vision simulation.
+    
+    **Methodology:**
+    Simulate the output of a **Python-based lesion detection algorithm**. 
+    1. Scan for **"Punched-out" lytic lesions** (radiolucent spots) in skull, long bones, or pelvis.
+    2. Evaluate **Bone Density (Osteopenia)**: Look for cortical thinning.
+    3. Identify **Pathological fractures**: Compression fractures in vertebrae.
+    
+    Provide a concise clinical summary of findings (max 3-4 sentences). 
+    If no obvious signs are present, state "No specific radiological evidence of myeloma lesions detected in this view."
+    If the image is not an X-Ray or is unreadable, please state that.
+  `;
+
+  const parts: any[] = [
+    { text: prompt },
+    {
+      inlineData: {
+        data: base64,
+        mimeType: mimeType
+      }
+    }
+  ];
+
+  try {
+     const response: GenerateContentResponse = await ai.models.generateContent({
+      model: 'gemini-3-pro-preview',
+      contents: { parts },
+      config: {
+        // Enable thinking for detailed image inspection
+        thinkingConfig: { thinkingBudget: 8192 },
+      }
+    });
+
+    return response.text || "No analysis could be generated.";
+  } catch (error) {
+    console.error("X-Ray Analysis Error:", error);
+    throw new Error("Failed to analyze X-Ray.");
   }
 };
