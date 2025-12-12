@@ -26,17 +26,19 @@ export const analyzePatientCase = async (
     Your goal is to analyze patient symptoms, lab data, and any provided diagnostic imaging (CT, X-Ray, Ultrasound) to predict the early stages of Multiple Myeloma and support the oncologist's diagnosis.
 
     **Patient Context:**
+    ${data.patientId ? `- Patient ID: ${data.patientId}` : ''}
+    ${data.uhid ? `- UHID: ${data.uhid}` : ''}
     - Age: ${data.age}
     - Gender: ${data.gender}
     ${data.gender === 'Female' ? `- Pregnancy Status: ${data.isPregnant ? 'PREGNANT' : 'Not Pregnant'}` : ''}
     - Location: ${data.location} (High risk zone if Bomet East)
 
     **Past Medical History:**
-    ${data.medicalHistory.priorBoneIssues ? '- Prior Bone Issues (Fractures/Osteoporosis)' : ''}
-    ${data.medicalHistory.priorKidneyIssues ? '- History of Kidney Disease' : ''}
+    ${data.medicalHistory.priorBoneIssues !== 'None' ? `- Prior Bone Issues (Fractures/Osteoporosis): ${data.medicalHistory.priorBoneIssues}` : ''}
+    ${data.medicalHistory.priorKidneyIssues !== 'None' ? `- History of Kidney Disease: ${data.medicalHistory.priorKidneyIssues}` : ''}
     ${data.medicalHistory.historyOfMGUS ? '- History of Monoclonal Gammopathy (MGUS)' : ''}
     ${data.medicalHistory.other ? `- Other History: ${data.medicalHistory.other}` : ''}
-    ${!data.medicalHistory.priorBoneIssues && !data.medicalHistory.priorKidneyIssues && !data.medicalHistory.historyOfMGUS && !data.medicalHistory.other ? '- No significant history reported' : ''}
+    ${data.medicalHistory.priorBoneIssues === 'None' && data.medicalHistory.priorKidneyIssues === 'None' && !data.medicalHistory.historyOfMGUS && !data.medicalHistory.other ? '- No significant history reported' : ''}
 
     **Reported Symptoms:**
     ${Object.entries(data.symptoms).filter(([_, v]) => v).map(([k]) => `- ${k.replace(/([A-Z])/g, ' $1').toLowerCase()}`).join('\n')}
@@ -47,6 +49,10 @@ export const analyzePatientCase = async (
       if (k === 'mProteinPresent') return `- M-Protein Present (SPEP)${data.labResults.mProteinValue > 0 ? `: Level ${data.labResults.mProteinValue} g/dL` : ''}`;
       return `- ${k.replace(/([A-Z])/g, ' $1').toLowerCase()}`;
     }).join('\n')}
+
+    **Bone Marrow Biopsy (BMA):**
+    - Plasma Cell Percentage: ${data.boneMarrowBiopsy.plasmaCellPercentage}%
+    - Abnormal/Clonal Plasma Cells Detected: ${data.boneMarrowBiopsy.abnormalPlasmaCells ? 'YES' : 'No'}
 
     **Additional Notes:**
     ${data.notes}

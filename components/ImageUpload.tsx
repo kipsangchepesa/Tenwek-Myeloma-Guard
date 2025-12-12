@@ -35,7 +35,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ title, onImageSelect, 
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-200 h-full flex flex-col">
       <h2 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-        <svg className="w-5 h-5 text-teal-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <svg className="w-5 h-5 text-rose-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
         {title}
@@ -43,7 +43,7 @@ export const ImageUpload: React.FC<ImageUploadProps> = ({ title, onImageSelect, 
       
       {!preview ? (
         <div 
-          className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-teal-500 transition-colors cursor-pointer bg-slate-50 flex-grow flex flex-col justify-center items-center"
+          className="border-2 border-dashed border-slate-300 rounded-lg p-8 text-center hover:border-rose-500 transition-colors cursor-pointer bg-slate-50 flex-grow flex flex-col justify-center items-center"
           onClick={() => fileInputRef.current?.click()}
         >
           <input 
